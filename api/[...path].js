@@ -56,35 +56,40 @@ app.use((req, res) => {
 // Handle the catch-all path: /api/[...path] -> /[...path]
 module.exports = (req, res) => {
   try {
-    // Vercel rewrites /api/* to /api/[...path]
-    // The path segments from [...path] are available in the request
+    // Vercel rewrites /api/* to /api/[...path]?path=...
+    // The path segments from [...path] are available in req.query.path or req.url
     // We need to reconstruct the path without /api prefix for Express
     
-    // Get the original URL - check multiple possible locations
-    let path = req.url || req.path || req.originalUrl || '/';
+    let path = '/';
+    
+    // Check if path is in query parameter (from rewrite)
+    if (req.query && req.query.path) {
+      path = '/' + req.query.path;
+    } else {
+      // Otherwise, get from URL and strip /api prefix
+      const url = req.url || req.path || req.originalUrl || '/';
+      path = url.startsWith('/api') ? url.replace(/^\/api/, '') || '/' : url;
+    }
+    
+    // Ensure path starts with /
+    if (!path.startsWith('/')) {
+      path = '/' + path;
+    }
     
     // Log for debugging (remove in production if needed)
     console.log('API Request:', {
-      url: req.url,
-      path: req.path,
-      originalUrl: req.originalUrl,
+      originalUrl: req.url,
+      originalPath: req.path,
+      originalOriginalUrl: req.originalUrl,
+      reconstructedPath: path,
       method: req.method,
       query: req.query
     });
     
-    // Remove /api prefix if present
-    if (path.startsWith('/api')) {
-      path = path.replace(/^\/api/, '') || '/';
-    }
-    
     // Update request properties for Express
     req.url = path;
     req.path = path;
-    if (req.originalUrl && req.originalUrl.startsWith('/api')) {
-      req.originalUrl = req.originalUrl.replace(/^\/api/, '') || '/';
-    } else if (!req.originalUrl) {
-      req.originalUrl = path;
-    }
+    req.originalUrl = path;
     
     // Remove baseUrl if it has /api
     if (req.baseUrl && req.baseUrl.startsWith('/api')) {
