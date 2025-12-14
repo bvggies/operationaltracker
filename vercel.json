@@ -1,18 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    },
-    {
-      "src": "api/[...path].js",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/build",
+  "installCommand": "npm install && cd client && npm install",
+  "framework": null,
   "rewrites": [
     {
       "source": "/api/(.*)",
