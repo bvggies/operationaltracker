@@ -12,4 +12,4 @@ client/build/
 server/uploads/
 .DS_Store
 *.log
-
+.vercel
