@@ -1,4 +1,4 @@
-// Vercel serverless function - catch-all for all API routes
+// Vercel catch-all serverless function for all API routes
 const express = require('express');
 const cors = require('cors');
 
@@ -6,7 +6,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: true, // Allow all origins in serverless
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -37,3 +37,4 @@ app.get('/', (req, res) => {
 
 // Export as Vercel serverless function
 module.exports = app;
+
