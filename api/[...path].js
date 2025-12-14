@@ -1,4 +1,5 @@
 // Vercel catch-all serverless function for all API routes
+// This file handles all /api/* requests
 const express = require('express');
 const cors = require('cors');
 
@@ -6,11 +7,11 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: true,
+  origin: true, // Allow all origins in serverless
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Import routes
 app.use('/auth', require('./auth'));
@@ -35,6 +36,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'Operations Tracker API', version: '1.0.0' });
 });
 
-// Export as Vercel serverless function
-module.exports = app;
+// 404 handler for API routes
+app.use((req, res) => {
+  res.status(404).json({ error: 'API endpoint not found', path: req.path });
+});
 
+// Export as Vercel serverless function
+// Vercel will pass the request to this Express app
+module.exports = (req, res) => {
+  return app(req, res);
+};
