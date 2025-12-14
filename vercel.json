@@ -7,6 +7,10 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "api/[...path].js",
+      "use": "@vercel/node"
     }
   ],
   "rewrites": [

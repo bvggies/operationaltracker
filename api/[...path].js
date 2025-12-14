@@ -42,7 +42,25 @@ app.use((req, res) => {
 });
 
 // Export as Vercel serverless function
-// Vercel will pass the request to this Express app
+// Handle the catch-all path: /api/[...path] -> /[...path]
 module.exports = (req, res) => {
+  // Vercel rewrites /api/* to /api/[...path]
+  // We need to strip /api from the path so Express routes work correctly
+  const originalUrl = req.url;
+  const originalPath = req.path;
+  
+  // Remove /api prefix if present
+  if (originalUrl.startsWith('/api')) {
+    req.url = originalUrl.replace(/^\/api/, '') || '/';
+  }
+  if (originalPath && originalPath.startsWith('/api')) {
+    req.path = originalPath.replace(/^\/api/, '') || '/';
+  }
+  
+  // Also handle baseUrl if set
+  if (req.baseUrl && req.baseUrl.startsWith('/api')) {
+    req.baseUrl = req.baseUrl.replace(/^\/api/, '');
+  }
+  
   return app(req, res);
 };
