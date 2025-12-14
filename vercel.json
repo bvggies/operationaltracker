@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "installCommand": "npm install && cd client && npm install",
-  "buildCommand": "cd client && npm run build",
-  "outputDirectory": "client/build",
-  "framework": null,
   "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    },
     {
       "src": "api/[...path].js",
       "use": "@vercel/node"
@@ -14,6 +17,10 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/[...path]?path=$1"
+    },
+    {
+      "source": "/(.*\\.(js|css|json|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
+      "destination": "/$1"
     },
     {
       "source": "/(.*)",
