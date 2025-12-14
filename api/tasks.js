@@ -1,7 +1,7 @@
 const express = require('express');
-const pool = require('../config/db');
-const { authenticateToken } = require('../middleware/auth');
-const { logAudit } = require('../middleware/audit');
+const pool = require('./config/db');
+const { authenticateToken, authorizeRoles } = require('./middleware/auth');
+const { logAudit } = require('./middleware/audit');
 
 const router = express.Router();
 
