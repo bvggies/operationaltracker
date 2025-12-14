@@ -31,6 +31,17 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'API is working!', 
+    timestamp: new Date().toISOString(),
+    url: req.url,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
 // Root API endpoint
 app.get('/', (req, res) => {
   res.json({ message: 'Operations Tracker API', version: '1.0.0' });
@@ -44,23 +55,49 @@ app.use((req, res) => {
 // Export as Vercel serverless function
 // Handle the catch-all path: /api/[...path] -> /[...path]
 module.exports = (req, res) => {
-  // Vercel rewrites /api/* to /api/[...path]
-  // We need to strip /api from the path so Express routes work correctly
-  const originalUrl = req.url;
-  const originalPath = req.path;
-  
-  // Remove /api prefix if present
-  if (originalUrl.startsWith('/api')) {
-    req.url = originalUrl.replace(/^\/api/, '') || '/';
+  try {
+    // Vercel rewrites /api/* to /api/[...path]
+    // The path segments from [...path] are available in the request
+    // We need to reconstruct the path without /api prefix for Express
+    
+    // Get the original URL - check multiple possible locations
+    let path = req.url || req.path || req.originalUrl || '/';
+    
+    // Log for debugging (remove in production if needed)
+    console.log('API Request:', {
+      url: req.url,
+      path: req.path,
+      originalUrl: req.originalUrl,
+      method: req.method,
+      query: req.query
+    });
+    
+    // Remove /api prefix if present
+    if (path.startsWith('/api')) {
+      path = path.replace(/^\/api/, '') || '/';
+    }
+    
+    // Update request properties for Express
+    req.url = path;
+    req.path = path;
+    if (req.originalUrl && req.originalUrl.startsWith('/api')) {
+      req.originalUrl = req.originalUrl.replace(/^\/api/, '') || '/';
+    } else if (!req.originalUrl) {
+      req.originalUrl = path;
+    }
+    
+    // Remove baseUrl if it has /api
+    if (req.baseUrl && req.baseUrl.startsWith('/api')) {
+      req.baseUrl = req.baseUrl.replace(/^\/api/, '');
+    }
+    
+    // Call Express app
+    return app(req, res);
+  } catch (error) {
+    console.error('API Handler Error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message 
+    });
   }
-  if (originalPath && originalPath.startsWith('/api')) {
-    req.path = originalPath.replace(/^\/api/, '') || '/';
-  }
-  
-  // Also handle baseUrl if set
-  if (req.baseUrl && req.baseUrl.startsWith('/api')) {
-    req.baseUrl = req.baseUrl.replace(/^\/api/, '');
-  }
-  
-  return app(req, res);
 };
